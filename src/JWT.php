@@ -4,11 +4,12 @@ use \Firebase\JWT\JWT;
 
 //@param: $payload == data to encode
 //@return: jwt
-function encodeJWT($payload, $algo = 'HS256') {
+function encodeJWT($username, $algo = 'HS256') {
     $key = getenv('SECRET_KEY', true) ?: getenv('SECRET_KEY');
     $header = array('typ' => 'JWT', 'alg' => $algo);
     $segments = array();
     $segments[] = JWT::urlsafeB64Encode(JWT::jsonEncode($header));
+    $payload = array("username" => $username, "exp" => (time() + (3600*24*7)));
     $segments[] = JWT::urlsafeB64Encode(JWT::jsonEncode($payload));
     $signing_input = implode('.', $segments);
     $signature = JWT::sign($signing_input, $key, $algo);
@@ -46,17 +47,28 @@ function decodeJWT($jwt, $verify = true)
     return $payload;
 }
 
-$app->get('/login/test', function($request, $response, $args) {
-    $username = "mkqueenan";
-    $jwt = encodeJWT($username);
-    print_r($jwt);
-    $payload = decodeJWT($jwt);
-    print_r($payload);
+//test login
+//proof of concept
+//DISREGARD
+$app->post('/login/test', function($request, $response, $args) {
+    //get data from POST
+    $data = $request->getParsedBody();
+    $token = $data['jwt'];
+    try {
+        $raw = decodeJWT($token);
+    } catch (\Exception $e) {
+        $app->halt(403);
+        //return json_encode(array("successful" => false));
+    }
+    //$username = $raw['username'];
+    return json_encode(array("successful" => true, "username" => $raw));
+
     // $username = "mkqueenan";
     // $jwt = encodeJWT($username);
     // print_r($jwt);
     // $payload = decodeJWT($jwt);
     // print_r($payload);
+
     // $key = "example.key";
     // $token = array(
     //     "iss" => "http://example.org",
@@ -70,5 +82,3 @@ $app->get('/login/test', function($request, $response, $args) {
     // print_r($decoded);
     // $decoded_array = (array) $decoded;
 });
-
-?>

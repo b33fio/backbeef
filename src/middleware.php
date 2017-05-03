@@ -1,10 +1,29 @@
 <?php
-// Application middleware
 
-// e.g: $app->add(new \Slim\Csrf\Guard);
+require_once("JWT.php");
+require __DIR__ . '/../vendor/autoload.php';
 
-//middleware for JWT Auth
-$app->add(new \Slim\Middleware\JwtAuthentication([
-    //SECRET_KEY == env variable within apache2 beef.conf
-    "secret" => getenv('SECRET_KEY')
-]));
+class AuthMiddleware
+{
+    public function __invoke($request, $response, $next)
+    {
+        $token = $request->getParsedBody();
+        if(isset($token['jwt']) && isValid($token['jwt'])) {
+            return $next($request, $response);
+        } else {
+            return $response->withStatus(403);
+        }
+    }
+
+    private function isValid($tkn)
+    {
+        try {
+            $payload = decodeJWT($tkn);
+            $now = time();
+            return !($now > $payload['exp']);            
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+}

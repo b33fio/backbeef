@@ -30,7 +30,7 @@ require __DIR__ . '/../src/postroutes.php';
 require __DIR__ . '/../src/login.php';
 
 // JWT
-require __DIR__ . '/../src/JWT.php';
+require_once __DIR__ . '/../src/JWT.php';
 
 //Mailgun
 require __DIR__ . '/../src/mailgun.php';
